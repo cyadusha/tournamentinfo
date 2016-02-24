@@ -9,8 +9,8 @@ Download the file first and then read the txt file into R.
 
 ```{r}
 library(RCurl)
-library(stringr)
-url = "https://github.com/cyadusha/tournamentinfo/blob/master/tournamentinfo.txt"
+library('stringr')
+url = "https://raw.githubusercontent.com/cyadusha/tournamentinfo/master/tournamentinfo.txt"
 x = getURL(url)
 tournamentinfo = read.delim(file = textConnection(x), header = TRUE)
 ```
@@ -89,6 +89,7 @@ We collect all of the columns computed above into a single data frame of 5 colum
 ```{r}
 tournamentdata = data.frame(names, states, totalpoints, prerating, averageopponentrating)
 colnames(tournamentdata) = c("Name", "State", "Total Number of Points", "Pre-Rating", "Average Pre-Rating of Opponents")
+head(tournamentdata)
 ```
 
 Now we write the data into a .csv file.
@@ -97,8 +98,3 @@ Now we write the data into a .csv file.
 write.table(tournamentdata, file = "tournamentdata.csv", sep = ",", row.names = FALSE)
 ```
 
-Now we make sure the data was read into a .csv file. 
-
-```{r}
-tournamentdata = read.csv(file = "/Users/chittampalliyashaswini/Desktop/Yadu/tournamentdata.csv", sep = ",", header = TRUE)
-```
