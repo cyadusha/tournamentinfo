@@ -8,8 +8,8 @@ output: html_document
 Download the file first and then read the txt file into R.
 
 ```{r}
+library(stringr)
 library(RCurl)
-library('stringr')
 url = "https://raw.githubusercontent.com/cyadusha/tournamentinfo/master/tournamentinfo.txt"
 x = getURL(url)
 tournamentinfo = read.delim(file = textConnection(x), header = TRUE)
@@ -32,13 +32,9 @@ This is where we obtain the player names, total points, and the opponents' ident
 t1 = tournamentinfo[c(subsetrows[1:64]), ]
 names = str_trim(unlist(str_extract(t1, "[[:alpha:]]+ ?[[:alpha:]]+ [[:alpha:]]+")))
 totalpoints = str_trim(unlist(str_extract(t1, "[[:digit:]].[[:digit:]]")))
-location = str_locate(t1[1], "39|W")
-opponents = str_sub(t1, location[1])
-opponents = unlist(str_replace_all(opponents, "[:alpha:]+", ""))
-opponents = unlist(str_replace_all(opponents, "[:space:]+", ""))
-opponents = str_sub(opponents, 1, -2)
-opponents = unlist(str_split(opponents, "[|]"))
-opponents = c(as.numeric(unlist(str_extract(opponents, "[[:digit:]]+"))))
+opponents = str_extract_all(t1, "[[:digit:]]{2}+[|]+[[:upper:]]|[[:digit:]]+[|]+[[:upper:]]|[[:digit:]]+[|]")
+opponents = str_extract_all(opponents,"[[:digit:]]{2}|[[:digit:]]")
+opponents = lapply(opponents, as.numeric)
 ```
 
 The rows where the state names and the preratings are stored are one row below those of the player's names. 
@@ -56,32 +52,29 @@ states = str_trim(unlist(str_extract(t2, "[:alpha:]+[:alpha:]")))
 prerating = str_trim(unlist(str_extract(t2, "R: ?.[[:digit:]]{3}|R: ?.[[:digit:]]{4}")))
 prerating = str_sub(prerating, start = 4, end = 7)
 prerating = as.numeric(prerating)
-prerating = data.frame(prerating)
 ```
 
 We have to set up the identification numbers of the opponents as numeric values. 
 
 ```{r}
-opponents = data.frame(matrix(as.numeric(opponents), nrow = 64, ncol = 7, byrow = T))
+id = c(1:length(t1))
+t3 = data.frame(id, prerating)
 ```
 
 Next, we match the identification number of each opponent given in each round with the prerating of the opponent given in the row below the name.
 
 ```{r}
-opponents1 = data.frame(V1 = prerating$prerating[opponents$X1])
-opponents2 = data.frame(V2 = prerating$prerating[opponents$X2])
-opponents3 = data.frame(V3 = prerating$prerating[opponents$X3])
-opponents4 = data.frame(V4 = prerating$prerating[opponents$X4])
-opponents5 = data.frame(V5 = prerating$prerating[opponents$X5])
-opponents6 = data.frame(V6 = prerating$prerating[opponents$X6])
-opponents7 = data.frame(V7 = prerating$prerating[opponents$X7])
-opponents = data.frame(opponents1, opponents2, opponents3, opponents4, opponents5, opponents6, opponents7)
+opponentsmatching = lapply(opponents, function(x){
+  sapply(x, function(y){
+    y = t3$prerating[t3$id == y] 
+  })
+})
 ```
 
 Finally we compute the average opponent rating for each player. For some players, the value in some of their rounds is actually null. For those players we will just average the given values. 
 
 ```{r}
-averageopponentrating = round(rowMeans(opponents, na.rm = T), 0)
+averageopponentrating = round(sapply(opponentsmatching,mean), 0)
 ```
 
 We collect all of the columns computed above into a single data frame of 5 columns and 64 rows.
@@ -98,3 +91,8 @@ Now we write the data into a .csv file.
 write.table(tournamentdata, file = "tournamentdata.csv", sep = ",", row.names = FALSE)
 ```
 
+Now we make sure the data was read into a .csv file. 
+
+```{r}
+tournamentdata = read.csv(file = "/Users/chittampalliyashaswini/Desktop/Yadu/tournamentdata.csv", sep = ",", header = TRUE)
+```

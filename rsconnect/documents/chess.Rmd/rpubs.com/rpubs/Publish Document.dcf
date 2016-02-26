@@ -1,0 +1,7 @@
+name: Publish Document
+account: rpubs
+server: rpubs.com
+bundleId:
+        https://api.rpubs.com/api/v1/document/155912/ac23f78f8b71403a9f53d74d77f27309
+url: http://rpubs.com/cyadusha/155912/edit
+when: 1456454422.58678
